@@ -1,4 +1,8 @@
-# online_shoppers_intention
+# Online Shoppers Intention
+
+## Binary Classification using Boosting algorithms
+
+## Goal
 
 The purpose of this real business case is to build a predictive model that is able, given the characteristics of a user session, to predict if that user will finalize a purchase.
 
