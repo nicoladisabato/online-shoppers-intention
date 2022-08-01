@@ -191,3 +191,137 @@ After training the model on the train dataset, you can use the predict
 dataset. To analyze the performance of the model, it was decided to
 print the confusion matrix in addition to the precision, recall and
 f1-score metrics, in addition to the accuracy metric.
+
+``` r
+#predictions
+pred_ada = predict(model_adaboost, newdata=test)
+
+#confusion matrix creation
+cm = confusionMatrix(as.factor(pred_ada$class),as.factor(y_test), positive = '1')
+cm
+```
+
+    ## Confusion Matrix and Statistics
+    ## 
+    ##           Reference
+    ## Prediction    0    1
+    ##          0 2431  204
+    ##          1  141  306
+    ##                                          
+    ##                Accuracy : 0.8881         
+    ##                  95% CI : (0.8764, 0.899)
+    ##     No Information Rate : 0.8345         
+    ##     P-Value [Acc > NIR] : < 2.2e-16      
+    ##                                          
+    ##                   Kappa : 0.5736         
+    ##                                          
+    ##  Mcnemar's Test P-Value : 0.0008439      
+    ##                                          
+    ##             Sensitivity : 0.60000        
+    ##             Specificity : 0.94518        
+    ##          Pos Pred Value : 0.68456        
+    ##          Neg Pred Value : 0.92258        
+    ##              Prevalence : 0.16548        
+    ##          Detection Rate : 0.09929        
+    ##    Detection Prevalence : 0.14504        
+    ##       Balanced Accuracy : 0.77259        
+    ##                                          
+    ##        'Positive' Class : 1              
+    ## 
+
+``` r
+print(cm$byClass[5])
+```
+
+    ## Precision 
+    ## 0.6845638
+
+``` r
+print(cm$byClass[6])
+```
+
+    ## Recall 
+    ##    0.6
+
+``` r
+print(cm$byClass[7])
+```
+
+    ##        F1 
+    ## 0.6394984
+
+It is immediately evident how the classification model, despite having
+an accuracy value of 0.88, is found to be not very precise as the values
+of Precision, Recall and F1 are quite low. This often happens in these
+cases, that is with the presence of unbalanced classes: in such cases
+the accuracy metric is not very informative.
+
+To build the best possible Adaboost model, depending on the dataset, we
+have chosen to build a graph from which to display the best number of
+decision trees (of iterations) to specify to build a more precise model,
+based on the errors made.
+
+``` r
+best_adaboost <- adaboost(Revenue ~ ., data=train, nIter=125)
+
+#predictions
+pred_best_ada = predict(best_adaboost, newdata=test)
+
+#confusion matrix creation
+cm <- confusionMatrix(as.factor(pred_best_ada$class),as.factor(y_test), positive = '1')
+cm
+```
+
+    ## Confusion Matrix and Statistics
+    ## 
+    ##           Reference
+    ## Prediction    0    1
+    ##          0 2474  209
+    ##          1   98  301
+    ##                                           
+    ##                Accuracy : 0.9004          
+    ##                  95% CI : (0.8893, 0.9107)
+    ##     No Information Rate : 0.8345          
+    ##     P-Value [Acc > NIR] : < 2.2e-16       
+    ##                                           
+    ##                   Kappa : 0.6049          
+    ##                                           
+    ##  Mcnemar's Test P-Value : 3.429e-10       
+    ##                                           
+    ##             Sensitivity : 0.59020         
+    ##             Specificity : 0.96190         
+    ##          Pos Pred Value : 0.75439         
+    ##          Neg Pred Value : 0.92210         
+    ##              Prevalence : 0.16548         
+    ##          Detection Rate : 0.09766         
+    ##    Detection Prevalence : 0.12946         
+    ##       Balanced Accuracy : 0.77605         
+    ##                                           
+    ##        'Positive' Class : 1               
+    ## 
+
+``` r
+print(cm$byClass[5])
+```
+
+    ## Precision 
+    ##  0.754386
+
+``` r
+print(cm$byClass[6])
+```
+
+    ##    Recall 
+    ## 0.5901961
+
+``` r
+print(cm$byClass[7])
+```
+
+    ##        F1 
+    ## 0.6622662
+
+From the results it is possible to observe how better results have been
+achieved, starting from the Precision metric which describes a greater
+precision in the prediction of the positive label 1 which passes from
+0.68 to 0.75. The other metrics remain similar.
