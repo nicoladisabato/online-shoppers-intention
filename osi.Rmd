@@ -75,3 +75,24 @@ dim(intentions)
 After the preprocessing phase, we obtain a dataset with 75 features.
 
 ## Train and Test partition
+
+```{r}
+set.seed(100)
+inTrain <- createDataPartition(y = intentions$Revenue, p = .75, list = FALSE)
+train <- intentions[ inTrain,] 
+test <- intentions[-inTrain,]
+
+X_train <- sparse.model.matrix(Revenue ~ .-1, data = train)
+y_train <- train[,"Revenue"]  
+X_test <- sparse.model.matrix(Revenue~.-1, data = test)
+y_test <- test[,"Revenue"]
+```
+
+## Let's explore AdaBoost model
+
+```{r}
+model_adaboost <- adaboost(Revenue ~ ., data=train, nIter=10)
+model_adaboost
+```
+
+After training the model on the train dataset, you can use the predict () method to predict the output of the Revenue class in the test dataset. To analyze the performance of the model, it was decided to print the confusion matrix in addition to the precision, recall and f1-score metrics, in addition to the accuracy metric.

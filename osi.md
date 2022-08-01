@@ -160,3 +160,34 @@ dim(intentions)
 After the preprocessing phase, we obtain a dataset with 75 features.
 
 ## Train and Test partition
+
+``` r
+set.seed(100)
+inTrain <- createDataPartition(y = intentions$Revenue, p = .75, list = FALSE)
+train <- intentions[ inTrain,] 
+test <- intentions[-inTrain,]
+
+X_train <- sparse.model.matrix(Revenue ~ .-1, data = train)
+y_train <- train[,"Revenue"]  
+X_test <- sparse.model.matrix(Revenue~.-1, data = test)
+y_test <- test[,"Revenue"]
+```
+
+## Let’s explore AdaBoost model
+
+``` r
+model_adaboost <- adaboost(Revenue ~ ., data=train, nIter=10)
+model_adaboost
+```
+
+    ## adaboost(formula = Revenue ~ ., data = train, nIter = 10)
+    ## Revenue ~ .
+    ## Dependent Variable: Revenue
+    ## No of trees:10
+    ## The weights of the trees are:1.3226071.1136721.0410931.0339541.0131450.95893290.92418360.92972750.90278420.8971979
+
+After training the model on the train dataset, you can use the predict
+() method to predict the output of the Revenue class in the test
+dataset. To analyze the performance of the model, it was decided to
+print the confusion matrix in addition to the precision, recall and
+f1-score metrics, in addition to the accuracy metric.
