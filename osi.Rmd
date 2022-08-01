@@ -1,0 +1,20 @@
+---
+title: "osi"
+author: "Nicola Disabato"
+date: "2022-08-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Online Shoppers Intention
+
+## Importing the dataset
+
+```{r}
+# Load the dataset and explore
+intentions <- read.csv("online_shoppers_intention.csv", header = TRUE) 
+str(intentions)
+```
