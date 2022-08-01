@@ -128,3 +128,104 @@ print(cm$byClass[7])
 ```
 
 From the results it is possible to observe how better results have been achieved, starting from the Precision metric which describes a greater precision in the prediction of the positive label 1 which passes from 0.68 to 0.75. The other metrics remain similar.
+
+## Gradient Boosting 
+
+Also in this case we started from a generic Gradient Boosting model, selecting a large number of trees in such a way as to build a graph that allows you to select a number of trees suitable for the train dataset, through the gbm.perf () function .
+
+To do this, cross-validation is used by selecting a fold number equal to 5.
+
+```{r}
+set.seed(100)
+
+# train GBM model
+gbm.fit <- gbm(
+  formula = train$Revenue ~ .,
+  data = train,
+  distribution = 'bernoulli',
+  n.trees = 1000,
+  interaction.depth = 2,
+  shrinkage = 0.1,
+  cv.folds = 5,
+  verbose = F
+  )  
+
+best.iter = gbm.perf(gbm.fit, method="cv")
+```
+
+It is possible to see from the graph the best number of iterations to obtain a model with good performance without overfitting.
+
+At this point, the Revenue label on the test data is estimated using the best.iter parameter as the number of decision trees. It specifies that the output defined by the logit function has a range of 0 to 1, so the y label is expected to have a default cutoff value of 0.5. If the output is greater than 0.5 it will be labeled as 1, otherwise as 0. To do this we used the round () function.
+
+```{r}
+test_pred = predict(object = gbm.fit,
+                   newdata = test,
+                   n.trees = best.iter,
+                   type = "response")
+
+test_pred <- as.numeric(test_pred > 0.5)
+
+cm <- confusionMatrix(factor(test_pred), factor(y_test), positive = '1')
+print(cm)
+print(cm$byClass[5])
+print(cm$byClass[6])
+print(cm$byClass[7])
+```
+
+The results obtained are comparable to those obtained by the Adaboost algorithm, although slightly better for all metrics.
+
+## XGBoost
+
+After defining the parameters suitable for the classification problem, the model with k-fold cross validation was used, in order to estimate the best performance of the algorithm.
+
+One of the special features of XGBoost is the ability to follow the progress of learning after each round. Due to the way the boost works, there is a time when having too many rounds leads to overfitting. The following techniques will help avoid overfitting or optimize learning time by stopping it as soon as possible.
+
+One way to measure progress in learning a model is to provide XGBoost with a second set of data that is already classified. Therefore he can learn on the first dataset and test his model on the second.
+
+```{r}
+set.seed(100)
+
+xgb_train <- xgb.DMatrix(data = as.matrix(X_train), label = (y_train))
+xgb_test <- xgb.DMatrix(data = as.matrix(X_test), label = (y_test))
+
+param_list = list(booster = "gbtree", objective = "binary:logistic", eta=0.1, gamma=0, max_depth=4, subsample=1, colsample_bytree=1, eval_metric='error')
+
+watchlist <- list(train=xgb_train, test=xgb_test)
+
+xgbcv = xgb.cv(params = param_list,
+            data = xgb_train,
+            nrounds = 10000,
+            nfold = 5,
+            prediction = TRUE,   
+            showsd = T, 
+            stratified = T,
+            print_every_n = 5,
+            early_stopping_rounds = 50)
+
+```
+
+The output shows the best number of iterations to perform to have a good model performance without overfitting.
+
+```{r}
+xgbcv_model = xgboost(data = xgb_train,
+                    params = param_list,
+                    nrounds = 60,
+                    verbose=0)
+
+#test
+pred <- predict(xgbcv_model, xgb_test)
+pred <- as.numeric(pred > 0.5)
+
+#confusion matrix creation
+cm <- confusionMatrix(as.factor(pred), as.factor(y_test), positive='1')
+cm
+print(cm$byClass[5])
+print(cm$byClass[6])
+print(cm$byClass[7])
+```
+
+The performances of the XGBoost model are the best both in terms of metrics taken into consideration and in terms of execution time. In fact, the Precision metric that indicates when the model predicts the positive class well (i.e. in this case the class with the fewest instances) is greater than the other Boosting algorithms, reaching the value 0.79.
+
+## Conclusion
+
+We analyzed a dataset to perform a binary classification on it through the use of the various boosting techniques present in the literature. We can say, through the results obtained, that these techniques have proved, although costly at a computational level, quite accurate in the classification task, based on different metrics suitable for the problem in question. To obtain even more performing models, a search for the most suitable parameters was carried out through the cross-validation technique, such as the depth of the trees, the learning rate and the number of iterations.
