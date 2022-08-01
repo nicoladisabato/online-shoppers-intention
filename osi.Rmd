@@ -11,6 +11,20 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Importing libraries
+
+```{r}
+library(magrittr) 
+library(dplyr)
+library(caret)
+library(fastAdaboost)
+library(Matrix)
+library(ROCR)
+library(pROC)
+library(xgboost)
+library(gbm)
+```
+
 ## Importing the dataset
 
 ```{r}
@@ -18,3 +32,46 @@ knitr::opts_chunk$set(echo = TRUE)
 intentions <- read.csv("online_shoppers_intention.csv", header = TRUE) 
 str(intentions)
 ```
+
+```{r}
+table(intentions$Revenue)
+```
+
+As you can see, the dataset is made up of 12330 instances and 18 features. Of these observations, only 1908 are users who have finalized a purchase.
+
+All details can be found through the following link: <https://archive.ics.uci.edu/ml/datasets/Online+Shoppers+Purchasing+Intention+Dataset#>
+
+## Data Preparation
+
+```{r}
+intentions <- intentions %>% 
+  mutate(OperatingSystems = as.factor(OperatingSystems),
+         Browser = as.factor(Browser),
+         Region = as.factor(Region),
+         TrafficType = as.factor(TrafficType),
+         VisitorType = as.factor(VisitorType),
+         Month = as.factor(Month)
+         )
+
+intentions <- intentions %>% 
+  mutate(
+         Weekend = as.numeric(Weekend),
+         Revenue = as.numeric(Revenue)
+         )
+
+str(intentions)
+```
+
+We use one-hot encoding for categorical variables.
+
+```{r}
+dmy <- dummyVars(" ~ .", data = intentions)
+intentions <- data.frame(predict(dmy, newdata = intentions))
+
+dim(intentions)
+
+```
+
+After the preprocessing phase, we obtain a dataset with 75 features.
+
+## Train and Test partition
